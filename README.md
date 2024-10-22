@@ -80,4 +80,4 @@ This code implementation are adopted from [Si-Blurry](https://github.com/KHU-AGI
 
 ## 📝 License
 
-This project is licensed under <a rel="license" href="https://github.com/sczhou/CodeFormer/blob/master/LICENSE">NTU S-Lab License 1.0</a>. Redistribution and use should follow this license.
+This project is licensed under <a rel="license" href="https://github.com/sczhou/CodeFormer/blob/master/LICENSE">GPL-3.0 license</a>. Redistribution and use should follow this license.
