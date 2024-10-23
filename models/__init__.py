@@ -36,12 +36,7 @@ def get_model(args, **kwargs):
     
     try:
         if mode == "gacl":
-<<<<<<< HEAD
             return (VITACIL(num_classes, hidden),224)
-=======
-            name = name.split('_')[0]
-            return (VITACIL(num_classes, hidden, name),224)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
         if mode == 'SLDA':
             model = ModifiedViT(num_classes)
             for name, param in model.vit.named_parameters():

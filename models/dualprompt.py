@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import logging
 import timm
 from timm.models.registry import register_model
-from timm.models.vision_transformer import _cfg, default_cfgs,_create_vision_transformer
+from timm.models.vision_transformer import _create_vision_transformer
 from utils.train_utils import load_pretrain
 
 logger = logging.getLogger()

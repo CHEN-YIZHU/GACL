@@ -7,30 +7,6 @@ from torch.nn import functional as F
 from utils.online_sampler import OnlineTestSampler
 from torch.utils.data import DataLoader
 from methods._trainer import _Trainer
-<<<<<<< HEAD
-=======
-import torch
-import itertools as it
-from torch.nn import functional as F
-from tqdm import tqdm
-import torchvision.transforms as transforms
-import sys
-from utils.online_sampler import OnlineTestSampler
-from utils.utils import AverageMeter
-import torch.distributed as dist
-from utils.utils import accuracy
-
-def repeat_loader(loader: DataLoader, n: int):
-    nexts = it.cycle(iter(loader).__next__ for _ in range(n))
-    while n:
-        try:
-            for next in nexts:
-                yield next()
-        except StopIteration:
-            # Remove the iterator we just exhausted from the cycle.
-            n -= 1
-            nexts = it.cycle(it.islice(nexts, n))
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
 
 
 class GACL(_Trainer):
@@ -42,34 +18,21 @@ class GACL(_Trainer):
         self.hidden =  kwargs.get("Hidden")
 
         self.feature_size = self.hidden
-        self.W = torch.zeros((self.feature_size, 0)).double().cuda()
+        self.W = torch.zeros((self.feature_size, 0)).double().to(self.device)
 
         # Autocorrelation Memory Matrix
-        self.R = (torch.eye(self.feature_size) / self.Gamma).double().cuda()
-        self.n_train = kwargs.get("n_train")
+        self.R = (torch.eye(self.feature_size) / self.Gamma).double().to(self.device)
+        
 
 
     def train_learner(self):
         eval_dict = dict()
         self.model.eval()
-<<<<<<< HEAD
         for images, labels, idx in self.train_dataloader:
         
-            self.samples_cnt += (images.size(0))
+            self.samples_cnt += images.size(0)
 
             acc = self.online_step(images, labels, idx)
-=======
-        for ep in range(self.epoch):
-            if self.train_dataloader:
-                # for i,(images, labels, idx) in enumerate(self.train_dataloader):
-                for images, labels, idx in repeat_loader(self.train_dataloader, self.n_train):
-                
-                    self.samples_cnt += (images.size(0) / self.n_train) * self.world_size
-
-                    # self.samples_cnt += (images.size(0)) * self.world_size
-                    loss, acc = self.online_step(images, labels, idx)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
-
             self.report_training(self.samples_cnt, acc)
 
             if self.samples_cnt > self.num_eval:
@@ -83,6 +46,7 @@ class GACL(_Trainer):
                     self.report_test(self.samples_cnt, eval_dict['avg_acc'])
                     self.num_eval += self.eval_period
             sys.stdout.flush()
+        self.report_test(self.samples_cnt, eval_dict['avg_acc'])
 
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
@@ -99,10 +63,6 @@ class GACL(_Trainer):
         for _ in range(int(self.online_iter)):
             X = X.to(self.device)
             y = y.to(self.device)
-<<<<<<< HEAD
-=======
-            X = self.train_transform(X)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
             self.fit(X, y)
             logits = self.forward(X)
             _, pred_label = torch.max(logits, 1)

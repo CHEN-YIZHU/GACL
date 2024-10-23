@@ -41,12 +41,12 @@ class RM(ER):
     def online_step(self, images, labels, idx):
         # image, label = sample
         self.add_new_class(labels)
-        self.memory_sampler  = MemoryBatchSampler(self.memory, self.memory_batchsize, self.temp_batchsize * self.online_iter * self.world_size)
+        self.memory_sampler  = MemoryBatchSampler(self.memory, self.memory_batchsize, self.temp_batchsize * self.online_iter)
         self.memory_dataloader   = DataLoader(self.train_dataset, batch_size=self.memory_batchsize, sampler=self.memory_sampler, num_workers=0, pin_memory=True)
         self.memory_provider     = iter(self.memory_dataloader)
         # train with augmented batches
         _loss, _acc, _iter = 0.0, 0.0, 0
-        for _ in range(int(self.online_iter) * self.temp_batchsize * self.world_size):
+        for _ in range(int(self.online_iter) * self.temp_batchsize):
             loss, acc = self.online_train([images.clone(), labels.clone()])
             _loss += loss
             _acc += acc
@@ -91,12 +91,6 @@ class RM(ER):
 
     def update_memory(self, index, label):
         # Update memory
-        # if self.distributed:
-        #     index = torch.cat(self.all_gather(index.to(self.device)))
-        #     label = torch.cat(self.all_gather(label.to(self.device)))
-        #     index = index.cpu()
-        #     label = label.cpu()
-        
         for x, y in zip(index, label):
             if len(self.memory) >= self.memory_size:
                 label_frequency = copy.deepcopy(self.memory.cls_count)

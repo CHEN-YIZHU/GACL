@@ -3,7 +3,7 @@
 
 MODE="lwf"
 DATASET="cifar100" # cifar100, tinyimagenet, imagenet-r
-# DATASET="tinyimagenet"
+DATASET="tinyimagenet"
 DATASET="imagenet-r"
 N_TASKS=5
 N=50
@@ -16,17 +16,14 @@ if [ "$DATASET" == "cifar100" ]; then
     MEM_SIZE=0 ONLINE_ITER=3
     MODEL_NAME="vit_base" EVAL_PERIOD=1000
     BATCHSIZE=64; LR=5e-3 OPT_NAME="adam" SCHED_NAME="default"
-    HIDDEN=5000
 elif [ "$DATASET" == "tinyimagenet" ]; then
     MEM_SIZE=0 ONLINE_ITER=3
     MODEL_NAME="vit_base" EVAL_PERIOD=1000
     BATCHSIZE=64; LR=5e-3 OPT_NAME="adam" SCHED_NAME="default"
-    HIDDEN=5000
 elif [ "$DATASET" == "imagenet-r" ]; then
     MEM_SIZE=0 ONLINE_ITER=3
     MODEL_NAME="vit_base" EVAL_PERIOD=1000
     BATCHSIZE=64; LR=5e-3 OPT_NAME="adam" SCHED_NAME="default"
-    HIDDEN=5000
 else
     echo "Undefined setting"
     exit 1
@@ -43,6 +40,6 @@ do
     --rnd_seed $seed \
     --model_name $MODEL_NAME --opt_name $OPT_NAME --sched_name $SCHED_NAME \
     --lr $LR --batchsize $BATCHSIZE \
-    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir /local_datasets \
+    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir local_datasets \
     --note $NOTE --eval_period $EVAL_PERIOD --n_worker 4 --rnd_NM
 done

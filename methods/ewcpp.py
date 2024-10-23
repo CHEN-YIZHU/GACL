@@ -18,54 +18,30 @@ class EWCpp(ER):
         self.reg_coef = kwargs["reg_coef"]
         self.online_reg = True
 
-    # def setup_distributed_model(self):
-    #     super().setup_distributed_model()
+    def setup_model(self):
+        super().setup_model()
         
-    #     # except for last layers.
-    #     self.params = {
-    #         n: p for n, p in list(self.model.named_parameters())[:-2] if p.requires_grad
-    #     }  # For convenience
-    #     self.regularization_terms = {}
-    #     self.task_count = 0
+        # except for last layers.
+        self.params = {
+            n: p for n, p in list(self.model.named_parameters())[:-2] if p.requires_grad
+        }  # For convenience
+        self.regularization_terms = {}
+        self.task_count = 0
 
-    #     self.score = []
-    #     self.fisher = []
-    #     self.n_fisher_sample = None
-    #     self.empFI = False
-    #     self.alpha = 0.5
-    #     self.epoch_score = {}
-    #     self.epoch_fisher = {}
-    #     for n, p in self.params.items():
-    #         self.epoch_score[n] = (
-    #             p.clone().detach().fill_(0).to(self.device)
-    #         )  # zero initialized
-    #         self.epoch_fisher[n] = (
-    #             p.clone().detach().fill_(0).to(self.device)
-    #         )  # zero initialized
-    # def setup_distributed_model(self):
-    #     super().setup_distributed_model()
-        
-    #     # except for last layers.
-    #     self.params = {
-    #         n: p for n, p in list(self.model.named_parameters())[:-2] if p.requires_grad
-    #     }  # For convenience
-    #     self.regularization_terms = {}
-    #     self.task_count = 0
-
-    #     self.score = []
-    #     self.fisher = []
-    #     self.n_fisher_sample = None
-    #     self.empFI = False
-    #     self.alpha = 0.5
-    #     self.epoch_score = {}
-    #     self.epoch_fisher = {}
-    #     for n, p in self.params.items():
-    #         self.epoch_score[n] = (
-    #             p.clone().detach().fill_(0).to(self.device)
-    #         )  # zero initialized
-    #         self.epoch_fisher[n] = (
-    #             p.clone().detach().fill_(0).to(self.device)
-    #         )  # zero initialized
+        self.score = []
+        self.fisher = []
+        self.n_fisher_sample = None
+        self.empFI = False
+        self.alpha = 0.5
+        self.epoch_score = {}
+        self.epoch_fisher = {}
+        for n, p in self.params.items():
+            self.epoch_score[n] = (
+                p.clone().detach().fill_(0).to(self.device)
+            )  # zero initialized
+            self.epoch_fisher[n] = (
+                p.clone().detach().fill_(0).to(self.device)
+            )  # zero initialized
     
 
     def setup_model(self):
@@ -137,10 +113,6 @@ class EWCpp(ER):
 
         x = x.to(self.device)
         y = y.to(self.device)
-<<<<<<< HEAD
-=======
-        # x = self.train_transform(x)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
 
         self.optimizer.zero_grad()
         
@@ -150,8 +122,6 @@ class EWCpp(ER):
         logit, loss = self.model_forward(x,y)
         _, preds = logit.topk(self.topk, 1, True, True)
 
-
-        # print(self.use_amp)
 
         if self.use_amp:
             with torch.cuda.amp.autocast():

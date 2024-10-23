@@ -67,10 +67,6 @@ class _Trainer():
         self.imp_update_period   = kwargs.get("imp_update_period")
         
 
-        # # for distributed training
-        # self.dist_backend = 'nccl'
-        # self.dist_url = 'env://'
-
         self.lr_step     = kwargs.get("lr_step")    # for adaptive LR
         self.lr_length   = kwargs.get("lr_length")  # for adaptive LR
         self.lr_period   = kwargs.get("lr_period")  # for adaptive LR
@@ -81,19 +77,7 @@ class _Trainer():
         self.start_time = time.time()
         self.num_updates = 0
         self.train_count = 0
-        # self.ngpus_per_nodes = torch.cuda.device_count()
 
-        # self.world_size = 1
-
-        # if "WORLD_SIZE" in os.environ and os.environ["WORLD_SIZE"] != '':
-        #     self.world_size = int(os.environ["WORLD_SIZE"]) * self.ngpus_per_nodes
-        # else:
-        #     self.world_size = self.world_size * self.ngpus_per_nodes
-
-        # self.distributed = self.world_size > 1
-
-        # if self.distributed:
-        #     self.batchsize = self.batchsize // self.world_size
         if self.temp_batchsize is None:
             self.temp_batchsize = self.batchsize // 2
         if self.temp_batchsize > self.batchsize:
@@ -117,10 +101,6 @@ class _Trainer():
         self.scaler = torch.cuda.amp.GradScaler(enabled=self.use_amp)
 
         self.model_without_ddp = self.model
-        # if self.distributed:
-        #     self.model = torch.nn.parallel.DistributedDataParallel(self.model)
-        #     self.model._set_static_graph()
-        #     self.model_without_ddp = self.model.module
         self.criterion = self.model_without_ddp.loss_fn if hasattr(self.model_without_ddp, "loss_fn") else nn.CrossEntropyLoss(reduction="mean")
         
         self.optimizer = select_optimizer(self.opt_name, self.lr, self.model)
@@ -135,11 +115,6 @@ class _Trainer():
     def setup_dataset(self):
         # get dataset
         self.train_dataset = self.dataset(root=self.data_dir, train=True, download=True, transform=self.train_transform)
-<<<<<<< HEAD
-=======
-        # self.train_dataset = self.dataset(root=self.data_dir, train=True, download=True, transform=transforms.ToTensor())
-        
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
         self.test_dataset = self.dataset(root=self.data_dir, train=False, download=True, transform=self.test_transform)
         self.n_classes = len(self.train_dataset.classes)
         
@@ -147,11 +122,7 @@ class _Trainer():
         
         self.mask = torch.zeros(self.n_classes, device=self.device) - torch.inf
         self.seen = 0
-<<<<<<< HEAD
         
-=======
-
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
 
     def setup_transforms(self):
         train_transform = []
@@ -176,12 +147,6 @@ class _Trainer():
             transforms.ToTensor(),
             transforms.Normalize(self.mean, self.std),])
         
-        # self.train_transform = transforms.Compose([
-        #             *train_transform,
-        #             transforms.Resize((self.inp_size, self.inp_size), antialias=None),
-        #             transforms.RandomCrop(self.inp_size, padding=4),
-        #             transforms.Normalize(self.mean, self.std),])
-
         self.train_transform = transforms.Compose([
                     *train_transform,
                     transforms.Resize((self.inp_size, self.inp_size), antialias=None),
@@ -189,42 +154,9 @@ class _Trainer():
                     transforms.ToTensor(),
                     transforms.Normalize(self.mean, self.std),])
 
-    # def run(self):
-    #     # Distributed Launch
-    #     if self.distributed:
-    #         mp.spawn(self.main_worker, nprocs=self.ngpus_per_nodes, join=True)
-    #     else:
-    #         self.main_worker(self.gpu)
 
     def run(self) -> None:
-        
-        # torch.cuda.set_device(self.gpu)
-
         self.device = self.get_device()
-
-        # if self.distributed:
-        #     self.local_rank = self.gpu
-        #     if 'SLURM_PROCID' in os.environ.keys():
-        #         self.rank = int(os.environ['SLURM_PROCID']) * self.ngpus_per_nodes + self.gpu
-        #         print(f"| Init Process group {os.environ['SLURM_PROCID']} : {self.local_rank}")
-        #     elif 'WORLD_SIZE' in os.environ.keys():
-        #         self.rank = int(os.environ['RANK']) * self.ngpus_per_nodes + self.gpu
-        #         print(f"| Init Process group {os.environ['RANK']} : {self.local_rank}")
-        #     else :
-        #         self.rank = self.gpu
-        #         print(f"| Init Process group 0 : {self.local_rank}")
-        #     if 'MASTER_ADDR' not in os.environ.keys():
-        #         os.environ['MASTER_ADDR'] = '127.0.0.1'
-        #         os.environ['MASTER_PORT'] = '12701'
-        #     torch.cuda.set_device(self.gpu)
-        #     time.sleep(self.rank * 0.1) # prevent port collision
-        #     dist.init_process_group(backend=self.dist_backend, init_method=self.dist_url,
-        #                             world_size=self.world_size, rank=self.rank)
-        #     torch.distributed.barrier()
-        #     self.setup_for_distributed(self.is_main_process())
-        # else:
-        #     pass
-
         if self.rnd_seed is not None:
             random.seed(self.rnd_seed)
             np.random.seed(self.rnd_seed)
@@ -263,9 +195,7 @@ class _Trainer():
         task_records = defaultdict(list)
         self.eval_results = defaultdict(list)
         self.samples_cnt = 0
-
         self.num_eval = self.eval_period
-
         self.count_class = dict()
         self._cur_task = -1
 
@@ -282,7 +212,8 @@ class _Trainer():
 
             self.train_sampler.set_task(task_id)
             self.online_before_task(task_id)
-            self.train_learner()  
+            if self.train_dataloader:
+                self.train_learner()  
            
             self.online_after_task(task_id)
             
@@ -291,11 +222,6 @@ class _Trainer():
             if test_dataloader:
                 eval_dict = self.online_evaluate(test_dataloader) 
             
-                # if self.distributed:
-                #     eval_dict =  torch.tensor([eval_dict['avg_loss'], eval_dict['avg_acc'], *eval_dict['cls_acc']], device=self.device)
-                #     dist.reduce(eval_dict, dst=0, op=dist.ReduceOp.SUM)
-                #     eval_dict = eval_dict.cpu().numpy()
-                #     eval_dict = {'avg_loss': eval_dict[0]/self.world_size, 'avg_acc': eval_dict[1]/self.world_size, 'cls_acc': eval_dict[2:]/self.world_size}
                 task_acc = eval_dict['avg_acc']
 
                 print("[2-4] Update the information for the current task")
@@ -304,21 +230,12 @@ class _Trainer():
 
                 print("[2-5] Report task result")
         
-        # if self.is_main_process():
+        
         np.save(f"{self.log_path}/logs/{self.dataset_name}/{self.note}/seed_{self.rnd_seed}.npy", task_records["task_acc"])
 
-<<<<<<< HEAD
         if self.eval_period is not None:
             np.save(f'{self.log_path}/logs/{self.dataset_name}/{self.note}/seed_{self.rnd_seed}_eval.npy', self.eval_results['test_acc'])
             np.save(f'{self.log_path}/logs/{self.dataset_name}/{self.note}/seed_{self.rnd_seed}_eval_time.npy', self.eval_results['data_cnt'])
-=======
-            if self.eval_period is not None:
-                np.save(f'{self.log_path}/logs/{self.dataset_name}/{self.note}/seed_{self.rnd_seed}_eval.npy', self.eval_results['test_acc'])
-                np.save(f'{self.log_path}/logs/{self.dataset_name}/{self.note}/seed_{self.rnd_seed}_eval_time.npy', self.eval_results['data_cnt'])
-                np.save(f'{self.log_path}/logs/{self.dataset_name}/{self.note}/seed_{self.rnd_seed}_exposed_classes.npy', self.eval_results["exposed_class"])
-    
-            # Accuracy (A)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
             
         # Accuracy (A)
         A_auc = np.mean(self.eval_results["test_acc"])
@@ -342,12 +259,11 @@ class _Trainer():
 
 
     def train_learner(self):
+        eval_dict = dict()
         for i,(images, labels, idx) in enumerate(self.train_dataloader):
-            eval_dict = dict()
             if self.debug and (i+1) * self.temp_batchsize >= 500:
                 break
-            # self.samples_cnt += (images.size(0)) * self.world_size
-            self.samples_cnt += (images.size(0))
+            self.samples_cnt += images.size(0)
             loss, acc = self.online_step(images, labels, idx)
             self.report_training(self.samples_cnt, loss, acc)
             if self.samples_cnt > self.num_eval:
@@ -355,12 +271,6 @@ class _Trainer():
                     test_sampler = OnlineTestSampler(self.test_dataset, self.exposed_classes)
                     test_dataloader = DataLoader(self.test_dataset, batch_size=self.batchsize*2, sampler=test_sampler, num_workers=self.n_worker)
                     eval_dict = self.online_evaluate(test_dataloader)
-                    # if self.distributed:
-                    #     eval_dict =  torch.tensor([eval_dict['avg_loss'], eval_dict['avg_acc'], *eval_dict['cls_acc']], device=self.device)
-                    #     dist.reduce(eval_dict, dst=0, op=dist.ReduceOp.SUM)
-                    #     eval_dict = eval_dict.cpu().numpy()
-                    #     eval_dict = {'avg_loss': eval_dict[0]/self.world_size, 'avg_acc': eval_dict[1]/self.world_size, 'cls_acc': eval_dict[2:]/self.world_size}
-                    # if self.is_main_process():
                     self.eval_results["test_acc"].append(eval_dict['avg_acc'])
                     self.eval_results["avg_acc"].append(eval_dict['cls_acc'])        
                     self.eval_results["data_cnt"].append(self.samples_cnt)
@@ -370,18 +280,16 @@ class _Trainer():
         if len(eval_dict)!= 0:
             self.report_test(self.samples_cnt, eval_dict["avg_loss"], eval_dict['avg_acc'])
 
+
+        
+
     def add_new_class(self, class_name):
         for label in class_name:
             if label.item() not in self.exposed_classes:
                 self.exposed_classes.append(label.item())
             
             self.count_class[label.item()] =  self.count_class.get(label.item(), 0) + 1
-        # if self.distributed:
-        #     exposed_classes = torch.cat(self.all_gather(torch.tensor(self.exposed_classes, device=self.device))).cpu().tolist()
-        #     self.exposed_classes = []
-        #     for cls in exposed_classes:
-        #         if cls not in self.exposed_classes:
-        #             self.exposed_classes.append(cls)
+
         self.memory.add_new_class(cls_list=self.exposed_classes)
         self.mask[:len(self.exposed_classes)] = 0
         if 'reset' in self.sched_name:
@@ -400,38 +308,6 @@ class _Trainer():
     def online_evaluate(self, test_loader, samples_cnt):
         raise NotImplementedError()
 
-    # def is_dist_avail_and_initialized(self):
-    #     if not dist.is_available():
-    #         return False
-    #     if not dist.is_initialized():
-    #         return False
-    #     return True
-
-    # def get_world_size(self):
-    #     if not self.is_dist_avail_and_initialized():
-    #         return 1
-    #     return dist.get_world_size()
-
-    # def get_rank(self):
-    #     if not self.is_dist_avail_and_initialized():
-    #         return 0
-    #     return dist.get_rank()
-
-    # def is_main_process(self):
-    #     return self.get_rank() == 0
-
-    # def setup_for_distributed(self, is_master):
-    #     """
-    #     This function disables printing when not in master process
-    #     """
-    #     import builtins as __builtin__
-    #     builtin_print = __builtin__.print
-
-    #     def print(*args, **kwargs):
-    #         force = kwargs.pop('force', False)
-    #         if is_master or force:
-    #             builtin_print(*args, **kwargs)
-    #     __builtin__.print = print
 
     def report_training(self, sample_num, train_loss, train_acc):
         print(
@@ -467,33 +343,3 @@ class _Trainer():
     def reset_opt(self):
         self.optimizer = select_optimizer(self.opt_name, self.lr, self.model)
         self.scheduler = select_scheduler(self.sched_name, self.optimizer)
-
-    # def all_gather(self, item):
-    #     local_size = torch.tensor(item.size(0), device=self.device)
-    #     all_sizes = [torch.zeros_like(local_size) for _ in range(dist.get_world_size())]
-    #     for i in range(dist.get_world_size()):
-    #         if i == dist.get_rank():
-    #             dist.gather(local_size, all_sizes, dst=i)
-    #         else:
-    #             dist.gather(local_size, dst=i)
-    #     # dist.all_gather(all_sizes, local_size, async_op=False)
-    #     max_size = max(all_sizes)
-
-    #     size_diff = max_size.item() - local_size.item()
-    #     if size_diff:
-    #         padding = torch.zeros(size_diff, device=self.device, dtype=item.dtype)
-    #         item = torch.cat((item, padding))
-
-    #     all_qs_padded = [torch.zeros_like(item) for _ in range(dist.get_world_size())]
-
-    #     for i in range(dist.get_world_size()):
-    #         if i == dist.get_rank():
-    #             dist.gather(item, all_qs_padded, dst=i)
-    #         else:
-    #             dist.gather(item, dst=i)
-
-    #     # dist.all_gather(all_qs_padded, item)
-    #     all_qs = []
-    #     for q, size in zip(all_qs_padded, all_sizes):
-    #         all_qs.append(q[:size])
-    #     return all_qs

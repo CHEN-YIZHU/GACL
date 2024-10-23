@@ -32,7 +32,7 @@ else
     exit 1
 fi
 
-NOTE="$MODE"
+NOTE="GACL" # Short description of the experiment. (WARNING: logs/results with the same note will be overwritten!)
 
 for seed in 1 2 3 4 5
 do
@@ -42,7 +42,7 @@ do
     --rnd_seed $seed \
     --model_name $MODEL_NAME --opt_name $OPT_NAME --sched_name $SCHED_NAME \
     --lr $LR --batchsize $BATCHSIZE \
-    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir home/yzchen/local_datasets \
+    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir local_datasets \
     --note $NOTE --eval_period $EVAL_PERIOD --n_worker 4 --rnd_NM --Hidden $HIDDEN  --Gamma $GAMMA 
 done
 

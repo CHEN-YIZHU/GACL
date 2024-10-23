@@ -6,29 +6,13 @@ import torch.nn.functional as F
 import logging
 import timm
 from timm.models.registry import register_model
-from timm.models.vision_transformer import _cfg, default_cfgs,_create_vision_transformer
+from timm.models.vision_transformer import _create_vision_transformer
 from utils.train_utils import load_pretrain
 
 logger = logging.getLogger()
 
 T = TypeVar('T', bound = 'nn.Module')
 
-# default_cfgs['vit_base_patch16_224_l2p'] = _cfg(
-#         url='https://storage.googleapis.com/vit_models/imagenet21k/ViT-B_16.npz',
-#         num_classes=21843)
-
-# # Register the backbone model to timm
-# @register_model
-# def vit_base_patch16_224_l2p(pretrained=False, **kwargs):
-#     #  ViT-Base model (ViT-B/32) from original paper (https://arxiv.org/abs/2010.11929).
-#     # ImageNet-21k weights @ 224x224, source https://github.com/google-research/vision_transformer.
-#     # NOTE: this model has valid 21k classifier head and no representation (pre-logits) layer
-    
-#     model_kwargs = dict(
-#         patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
-#     model = _create_vision_transformer("vit_base_patch16_224", pretrained=pretrained, **model_kwargs)
-#     # model = timm.create_model("vit_base_patch16_224",pretrained=True,**model_kwargs)
-#     return model
 
 @register_model
 def deit_small_patch16_224(pretrained=False, **kwargs):
@@ -53,7 +37,7 @@ class MVP(nn.Module):
                  use_mask       : bool  = True,
                  use_contrastiv : bool  = False,
                  use_last_layer : bool  = True,
-                 backbone_name  : str   = 'vit_base_patch16_224', #  'vit_base_patch16_224_l2p',
+                #  backbone_name  : str   = 'vit_base_patch16_224_l2p',
                  **kwargs):
 
         super().__init__()
@@ -61,8 +45,8 @@ class MVP(nn.Module):
         self.features = torch.empty(0)
         self.keys     = torch.empty(0)
 
-        if backbone_name is None:
-            raise ValueError('backbone_name must be specified')
+        # if backbone_name is None:
+        #     raise ValueError('backbone_name must be specified')
         self.lambd       = lambd
         self.class_num   = num_classes
         self.task_num    = task_num
@@ -71,15 +55,15 @@ class MVP(nn.Module):
         self.use_last_layer  = use_last_layer
         self.selection_size  = selection_size
 
-        # self.add_module('backbone', timm.models.create_model(backbone_name, pretrained=True, num_classes=num_classes, drop_rate=0.,drop_path_rate=0.,drop_block_rate=None))
-        
-
+        # self.add_module('backbone', timm.models.create_model(backbone_name, pretrained=True, num_classes=num_classes,
+        #                                                      drop_rate=0.,drop_path_rate=0.,drop_block_rate=None))
         self.vit = timm.create_model("deit_small_patch16_224", pretrained=False,num_classes=num_classes, drop_rate=0.,drop_path_rate=0.,drop_block_rate=None)
         self.vit = load_pretrain(self.vit)
         self.add_module('backbone', self.vit)
-
+        
+        
         for name, param in self.backbone.named_parameters():
-            param.requires_grad = False
+                param.requires_grad = False
         self.backbone.head.weight.requires_grad = True
         self.backbone.head.bias.requires_grad   = True
 
@@ -106,7 +90,6 @@ class MVP(nn.Module):
             self.e_prompts = nn.Parameter(torch.randn(e_pool, self.e_size, self.backbone.embed_dim))
 
         elif prompt_func == 'prefix_tuning':
-            # 使用了 Transformer 的注意力机制
             self.prompt_func = self.prefix_tuning
             self.g_size = 2 * self.g_length * self.len_g_prompt
             self.e_size = 2 * self.e_length * self.len_e_prompt
@@ -218,9 +201,10 @@ class MVP(nn.Module):
         e_prompts = self.e_prompts[topk].squeeze().clone()
         mask = self.mask[topk].mean(1).squeeze().clone()
         
+    
         if self.use_contrastiv:
-            key_wise_distance = 1 - F.cosine_similarity(self.key.unsqueeze(1), self.key, dim=-1)
-            self.similarity_loss = -((key_wise_distance[topk] / mass[topk]).exp().mean() / ((distance / mass[topk]).exp().mean() + (key_wise_distance[topk] / mass[topk]).exp().mean()) + 1e-6).log()
+            key_wise_distance = 1 - F.cosine_similarity(self.key.unsqueeze(1), self.key.detach(), dim=-1)
+            self.similarity_loss = -((key_wise_distance[topk] / mass[topk]).exp().mean() / ((key_wise_distance[topk] / mass[topk]).exp().mean())).log()
         else:
             self.similarity_loss = distance.mean()
 

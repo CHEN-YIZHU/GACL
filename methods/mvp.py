@@ -65,8 +65,6 @@ class MVP(_Trainer):
         
         self.labels = torch.cat((self.labels, y), 0) # 把之前所有训练过的labels拼起来。
         
-        
-        
         if len(self.memory) > 0 and self.memory_batchsize > 0:
             memory_images, memory_labels = next(self.memory_provider)
             for i in range(len(memory_labels)):
@@ -78,10 +76,6 @@ class MVP(_Trainer):
         x = x.to(self.device)
         y = y.to(self.device)
        
-<<<<<<< HEAD
-=======
-        # x = self.train_transform(x)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
         
         self.optimizer.zero_grad()
         logit, loss = self.model_forward(x, y)

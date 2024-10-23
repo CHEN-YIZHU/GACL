@@ -15,7 +15,6 @@ if [ "$DATASET" == "cifar100" ]; then
     MEM_SIZE=500 ONLINE_ITER=3
     MODEL_NAME="vit_base" EVAL_PERIOD=1000
     BATCHSIZE=64; LR=5e-3 OPT_NAME="adam" SCHED_NAME="default"
-
 elif [ "$DATASET" == "tinyimagenet" ]; then
     MEM_SIZE=500 ONLINE_ITER=3
     MODEL_NAME="vit_base" EVAL_PERIOD=1000
@@ -24,16 +23,11 @@ elif [ "$DATASET" == "imagenet-r" ]; then
     MEM_SIZE=2000 ONLINE_ITER=3
     MODEL_NAME="vit_base" EVAL_PERIOD=1000
     BATCHSIZE=64; LR=5e-3 OPT_NAME="adam" SCHED_NAME="default"
-elif [ "$DATASET" == "core50" ]; then
-    MEM_SIZE=500 ONLINE_ITER=3
-    MODEL_NAME="vit_base" EVAL_PERIOD=1000
-    BATCHSIZE=64; LR=5e-3 OPT_NAME="adam" SCHED_NAME="default"
-    HIDDEN=5000
 else
     echo "Undefined setting"
     exit 1
 fi
-NOTE="ER"_"$MEM_SIZE"
+NOTE="ER"_"$MEM_SIZE" # Short description of the experiment. (WARNING: logs/results with the same note will be overwritten!)
 
 
 for seed in 1 2 3 4 5
@@ -44,6 +38,6 @@ do
     --rnd_seed $seed \
     --model_name $MODEL_NAME --opt_name $OPT_NAME --sched_name $SCHED_NAME \
     --lr $LR --batchsize $BATCHSIZE \
-    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir /local_datasets  \
+    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir local_datasets  \
     --note $NOTE --eval_period $EVAL_PERIOD --n_worker 4 --rnd_NM
 done

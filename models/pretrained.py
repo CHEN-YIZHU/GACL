@@ -2,13 +2,8 @@ import torch
 import torch.nn as nn
 import timm
 from timm.models.registry import register_model
-<<<<<<< HEAD
 from timm.models.vision_transformer import _cfg, _create_vision_transformer
 from utils.train_utils import load_pretrain
-=======
-from timm.models.vision_transformer import _cfg, default_cfgs,_create_vision_transformer
-from utils.utils import load_pretrain
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
 
 
 
@@ -29,10 +24,7 @@ class ModifiedViT(nn.Module):
         self.numclass=n_classes
         self.vit = timm.create_model("deit_small_patch16_224", pretrained=False)
         self.vit = load_pretrain(self.vit)
-<<<<<<< HEAD
         self.feature_dim = 384
-=======
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
         for name, param in self.vit.named_parameters():
             if 'head' not in name:
                 param.requires_grad = False
@@ -53,7 +45,7 @@ class ModifiedViT(nn.Module):
 
 
 class VITACIL(nn.Module):
-    def __init__(self, n_classes, hidden, name):
+    def __init__(self, n_classes, hidden):
         super(VITACIL, self).__init__()
         self.numclass = n_classes
         self.vit = timm.create_model("deit_small_patch16_224", pretrained=False, num_classes = n_classes)

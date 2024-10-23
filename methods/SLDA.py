@@ -66,30 +66,9 @@ class SLDA(_Trainer):
         if self.first_time:
             print('\nGetting data for base initialization...')
             base_init_data = []
-<<<<<<< HEAD
             base_init_labels = [] 
             _acc, _iter = 0.0, 0
             for _ in range(int(self.online_iter)):            
-=======
-            base_init_labels = []
-
-            # put features into array since base init needs all features at once
-            
-            for i, (batch_x, batch_y, idx) in enumerate(self.train_dataloader):
-                base_init_data = []
-                base_init_labels = []
-                self.samples_cnt += (batch_x.size(0)) * self.world_size
-                loss = AverageMeter()
-                _loss, _acc, _iter = 0.0, 0.0, 0
-                self.add_new_class(batch_y)
-                for j in range(len(batch_y)):
-                    batch_y[j] = self.exposed_classes.index(batch_y[j].item())
-                
-                # batch_x = self.train_transform(batch_x)
-                
-                batch_x_feat = self.model.features(batch_x.cuda())
-                
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
                 base_init_data.append(batch_x_feat)
                 base_init_labels.append(y)
                 base_init_data = torch.cat(base_init_data, dim=0)
@@ -104,19 +83,12 @@ class SLDA(_Trainer):
                 print(acc)
                 _iter += 1
 
-<<<<<<< HEAD
             print(_acc/_iter)
             return _acc / _iter
 
         else:
             for _ in range(int(self.online_iter)):
                 for x, y in zip(batch_x_feat, y):
-=======
-                # batch_x = self.train_transform(batch_x)
-                batch_x_feat = self.model.features(batch_x.cuda())
-                
-                for x, y in zip(batch_x_feat, batch_y):
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
                     self.fit(x.cpu(), y.view(1, ))
 
                 logits = self.predict(batch_x_feat)

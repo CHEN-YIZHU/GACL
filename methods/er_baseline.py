@@ -3,7 +3,6 @@ import gc
 import logging
 import numpy as np
 import torch
-# import torch.distributed as dist
 from torch.utils.data import DataLoader
 from utils.augment import cutmix_data
 from utils.train_utils import select_scheduler
@@ -27,7 +26,7 @@ class ER(_Trainer):
         self.add_new_class(labels)
         for j in range(len(labels)):
             labels[j] = self.exposed_classes.index(labels[j].item())
-        self.memory_sampler  = MemoryBatchSampler(self.memory, self.memory_batchsize, self.temp_batchsize * self.online_iter * self.world_size)
+        self.memory_sampler  = MemoryBatchSampler(self.memory, self.memory_batchsize, self.temp_batchsize * self.online_iter)
         self.memory_dataloader   = DataLoader(self.train_dataset, batch_size=self.memory_batchsize, sampler=self.memory_sampler, num_workers=4)
         self.memory_provider     = iter(self.memory_dataloader)
         # train with augmented batches
@@ -44,13 +43,7 @@ class ER(_Trainer):
     
     def update_memory(self, sample, label):
         # Update memory
-        # if self.distributed:
-        #     sample = torch.cat(self.all_gather(sample.to(self.device)))
-        #     label = torch.cat(self.all_gather(label.to(self.device)))
-        #     sample = sample.cpu()
-        #     label = label.cpu()
         idx = []
-        # if self.is_main_process():
         for lbl in label:
             self.seen += 1
             if len(self.memory) < self.memory_size:
@@ -61,17 +54,6 @@ class ER(_Trainer):
                     idx.append(j)
                 else:
                     idx.append(self.memory_size)
-        # Distribute idx to all processes
-        # if self.distributed:
-        #     idx = torch.tensor(idx).to(self.device)
-        #     size = torch.tensor([idx.size(0)]).to(self.device)
-        #     dist.broadcast(size, 0)
-        #     if dist.get_rank() != 0:
-        #         idx = torch.zeros(size.item(), dtype=torch.long).to(self.device)
-        #     dist.barrier() # wait for all processes to reach this point
-        #     dist.broadcast(idx, 0)
-        #     idx = idx.cpu().tolist()
-        # idx = torch.cat(self.all_gather(torch.tensor(idx).to(self.device))).cpu().tolist()
         
         for i, index in enumerate(idx):
             if len(self.memory) >= self.memory_size:
@@ -98,10 +80,6 @@ class ER(_Trainer):
             y = torch.cat([y, memory_labels], dim=0)
         x = x.to(self.device)
         y = y.to(self.device)
-<<<<<<< HEAD
-=======
-        # x = self.train_transform(x)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
 
         self.optimizer.zero_grad()
         logit, loss = self.model_forward(x,y)

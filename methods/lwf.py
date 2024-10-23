@@ -52,29 +52,15 @@ class LwF(ER):
         return _loss / _iter, _acc / _iter
 
     def add_new_class(self, class_name):
-        # For DDP, normally go into this function
-        # len_class = len(self.exposed_classes)
-        # exposed_classes = []
         for label in class_name:
             if label.item() not in self.exposed_classes:
                 self.exposed_classes.append(label.item())
-        # if self.distributed:
-        #     exposed_classes = torch.cat(self.all_gather(torch.tensor(self.exposed_classes, device=self.device))).cpu().tolist()
-        #     self.exposed_classes = []
-        #     for cls in exposed_classes:
-        #         if cls not in self.exposed_classes:
-        #             self.exposed_classes.append(cls)
         self.mask[:len(self.exposed_classes)] = 0
         if 'reset' in self.sched_name:
             self.update_schedule(reset=True)
     
     def update_memory(self, sample, label):
         # Update memory
-        # if self.distributed:
-        #     sample = torch.cat(self.all_gather(sample.to(self.device)))
-        #     label = torch.cat(self.all_gather(label.to(self.device)))
-        #     sample = sample.cpu()
-        #     label = label.cpu()
         idx = []
         if self.is_main_process():
             for lbl in label:
@@ -120,10 +106,6 @@ class LwF(ER):
         x = x.to(self.device)
         y = y.to(self.device)
         
-<<<<<<< HEAD
-=======
-        # x = self.train_transform(x)
->>>>>>> aae79708d0f5c6fdc6a9491e72aa9e28402ce309
 
         self.optimizer.zero_grad()
         logit, loss = self.model_forward(x,y)

@@ -1,4 +1,6 @@
-results/*
+local_datasets/
+
+results/
 *.log
 
 # Byte-compiled / optimized / DLL files
