@@ -18,11 +18,13 @@ class GACL(_Trainer):
         self.hidden =  kwargs.get("Hidden")
 
         self.feature_size = self.hidden
-        self.W = torch.zeros((self.feature_size, 0)).double().to(self.device)
-
-        # Autocorrelation Memory Matrix
-        self.R = (torch.eye(self.feature_size) / self.Gamma).double().to(self.device)
         
+    
+    def get_device(self):   
+        if torch.cuda.is_available():
+            return torch.device('cuda:0')
+        else:
+            return torch.device('cpu')
 
 
     def train_learner(self):
@@ -46,11 +48,12 @@ class GACL(_Trainer):
                     self.report_test(self.samples_cnt, eval_dict['avg_acc'])
                     self.num_eval += self.eval_period
             sys.stdout.flush()
-        self.report_test(self.samples_cnt, eval_dict['avg_acc'])
+        if len(eval_dict)!= 0:
+            self.report_test(self.samples_cnt, eval_dict['avg_acc'])
 
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
-        X_fe = self.model.expansion(X).double().cuda()
+        X_fe = self.model.expansion(X).double().to(self.device)
         return X_fe @ self.W
 
     def online_step(self, X, y, idx):
@@ -75,7 +78,7 @@ class GACL(_Trainer):
     @torch.no_grad()
     def fit(self, X: torch.Tensor, y: torch.Tensor) -> None:
         """Train the classifier incrementally by the input features X and label y (integers, not one-hot)"""
-        X_fe = self.model.expansion(X).double().cuda()
+        X_fe = self.model.expansion(X).double().to(self.device)
         
         num_classes = max(self.out_features, torch.max(y).item() + 1)
         assert isinstance(num_classes, int)
@@ -86,9 +89,9 @@ class GACL(_Trainer):
             self.out_features = num_classes
 
         
-        Y = F.one_hot(y, self.out_features).double().cuda()
-        self.R = self.R.cuda()
-        self.W = self.W.cuda()
+        Y = F.one_hot(y, self.out_features).double().to(self.device)
+        self.R = self.R.to(self.device)
+        self.W = self.W.to(self.device)
         K = torch.eye(X_fe.shape[0]).to(X_fe) + X_fe @ self.R @ X_fe.T
         self.R -= self.R @ X_fe.T @ torch.inverse(K) @ X_fe @ self.R
         self.W += self.R @ X_fe.T @ (Y - X_fe @ self.W)
@@ -142,6 +145,12 @@ class GACL(_Trainer):
 
     def online_before_task(self, task_id):
         pass
+
+    def setup_model(self):
+        super().setup_model()
+        self.W = torch.zeros((self.feature_size, 0)).double().to(self.device)
+        # Autocorrelation Memory Matrix
+        self.R = (torch.eye(self.feature_size) / self.Gamma).double().to(self.device)
 
 
     def report_training(self, sample_num, train_acc):

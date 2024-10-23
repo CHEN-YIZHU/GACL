@@ -28,14 +28,14 @@ else
 fi
 
 NOTE="SLDA"
-for seed in 1 2 3 4 5
+for seed in 1 
 do
-    CUDA_VISIBLE_DEVICES="0" python main.py --mode $MODE \
+    CUDA_VISIBLE_DEVICES="4" python main.py --mode $MODE \
     --dataset $DATASET \
     --n_tasks $N_TASKS --m $M --n $N \
     --rnd_seed $seed \
     --model_name $MODEL_NAME --opt_name $OPT_NAME --sched_name $SCHED_NAME \
     --lr $LR --batchsize $BATCHSIZE \
-    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir home/yzchen/local_datasets \
+    --memory_size $MEM_SIZE $GPU_TRANSFORM --online_iter $ONLINE_ITER --data_dir local_datasets \
     --note $NOTE --eval_period $EVAL_PERIOD --n_worker 4 --rnd_NM --streaming_update_sigma
 done

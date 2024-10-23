@@ -88,12 +88,14 @@ class _Trainer():
 
         os.makedirs(f"{self.log_path}/logs/{self.dataset_name}/{self.note}", exist_ok=True)
 
-    def get_device(self):   
+    def get_device(self, device_id=0):
         if torch.cuda.is_available():
-            return torch.device('cuda:0')
+            print(f"CUDA is available. Using GPU: {torch.cuda.get_device_name(device_id)}")
+            return torch.device(f'cuda:{device_id}')  # 根据传入的设备 ID 选择
         else:
+            print("CUDA is not available. Using CPU.")
             return torch.device('cpu')
-        
+
 
     def setup_model(self):
         print("Building model...")

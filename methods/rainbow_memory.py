@@ -11,7 +11,6 @@ from randaugment.randaugment import RandAugment
 
 from methods.er_baseline import ER
 from utils.datasets import ImageDataset
-from utils.augment import Cutout, Invert, Solarize, select_autoaugment
 from utils.memory import MemoryBatchSampler, MemoryOrderedSampler
 logger = logging.getLogger()
 

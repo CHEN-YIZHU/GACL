@@ -1,10 +1,4 @@
-# @InProceedings{Hayes_2020_CVPR_Workshops,
-# author = {Hayes, Tyler L. and Kanan, Christopher},
-# title = {Lifelong Machine Learning With Deep Streaming Linear Discriminant Analysis},
-# booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
-# month = {June},
-# year = {2020}
-# }
+# The codes in this file was adopted from https://github.com/tyler-hayes/Deep_SLDA/blob/master/experiment.py
 import time
 import datetime
 import torch
@@ -12,8 +6,6 @@ import sys
 from torch.utils.data import DataLoader
 from methods._trainer import _Trainer
 from utils.online_sampler import OnlineTestSampler
-from utils.train_utils import accuracy
-# import torch.distributed as dist
 
 
 def pool_feat(features):
@@ -55,6 +47,8 @@ class SLDA(_Trainer):
                     self.report_test(self.samples_cnt, eval_dict['avg_acc'])
                     self.num_eval += self.eval_period
                 sys.stdout.flush()
+        if len(eval_dict)!= 0:
+            self.report_test(self.samples_cnt, eval_dict['avg_acc'])
 
     def online_step(self, X, y, idx):
         self.add_new_class(y) 
@@ -63,12 +57,11 @@ class SLDA(_Trainer):
         X = X.to(self.device)
         y = y.to(self.device)
         batch_x_feat = self.model.features(X)
+        _acc, _iter = 0.0, 0
         if self.first_time:
-            print('\nGetting data for base initialization...')
-            base_init_data = []
-            base_init_labels = [] 
-            _acc, _iter = 0.0, 0
-            for _ in range(int(self.online_iter)):            
+            for _ in range(int(self.online_iter)):   
+                base_init_data = []
+                base_init_labels = []          
                 base_init_data.append(batch_x_feat)
                 base_init_labels.append(y)
                 base_init_data = torch.cat(base_init_data, dim=0)
@@ -80,16 +73,11 @@ class SLDA(_Trainer):
                 pred_label = pred_label.to(self.device)
                 acc = (pred_label == y).sum().item() / y.size(0)
                 _acc += acc
-                print(acc)
                 _iter += 1
-
-            print(_acc/_iter)
-            return _acc / _iter
-
         else:
             for _ in range(int(self.online_iter)):
-                for x, y in zip(batch_x_feat, y):
-                    self.fit(x.cpu(), y.view(1, ))
+                for x, label in zip(batch_x_feat, y):
+                    self.fit(x.cpu(), label.view(1, ))
 
                 logits = self.predict(batch_x_feat)
                 _, pred_label = torch.max(logits, 1)
@@ -97,8 +85,7 @@ class SLDA(_Trainer):
                 acc = (pred_label == y).sum().item() / y.size(0) #  correct_cnt
                 _acc += acc
                 _iter += 1
-            return _acc / _iter
-
+        return _acc / _iter
 
 
     def predict(self, X, return_probas=False):
@@ -252,7 +239,6 @@ class SLDA(_Trainer):
 
     def setup_model(self):
         super().setup_model()
-
         self.input_shape = self.model.feature_dim
         self.Sigma = torch.ones((self.input_shape, self.input_shape)).to(self.device)
         self.Lambda = torch.zeros_like(self.Sigma).to(self.device)
