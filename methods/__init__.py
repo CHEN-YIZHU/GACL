@@ -9,7 +9,6 @@ from .SLDA import SLDA
 __all__ = [
     "ER",
     "EWCpp",
-    "FT",
     "LwF",
     "RM",
     "GACL",
@@ -23,7 +22,6 @@ def get_method(name):
         return {
             "er": ER,
             "ewcpp": EWCpp,
-            "Finetuning": FT,
             "lwf": LwF,
             "rm": RM,
             "mvp": MVP,

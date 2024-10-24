@@ -2,8 +2,7 @@
 
 MODE="er"
 DATASET="cifar100" # cifar10, cifar100, tinyimagenet, imagenet
-# DATASET="imagenet-r"
-DATASET="tinyimagenet"
+
 N_TASKS=5
 N=50
 M=10
@@ -28,7 +27,6 @@ else
     exit 1
 fi
 NOTE="ER"_"$MEM_SIZE" # Short description of the experiment. (WARNING: logs/results with the same note will be overwritten!)
-
 
 for seed in 1 2 3 4 5
 do

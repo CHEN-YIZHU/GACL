@@ -3,8 +3,6 @@
 
 MODE="lwf"
 DATASET="cifar100" # cifar100, tinyimagenet, imagenet-r
-DATASET="tinyimagenet"
-DATASET="imagenet-r"
 N_TASKS=5
 N=50
 M=10

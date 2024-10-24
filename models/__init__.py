@@ -32,19 +32,19 @@ def get_model(args, **kwargs):
     name = name.lower()
     num_classes = kwargs.get("num_classes")
     mode = args.get("mode")
-    hidden    =  args.get("Hidden")
+    buffer_size = args.get("buffer_size")
     
     try:
         if mode == "gacl":
-            return (VITACIL(num_classes, hidden),224)
-        if mode == 'SLDA':
+            return (VITACIL(num_classes, buffer_size),224)
+        elif mode == 'SLDA':
             model = ModifiedViT(num_classes)
             for name, param in model.vit.named_parameters():
                 if 'head' not in name:
                     param.requires_grad = False
             return (model, 224)
         
-        if 'vit' in name:
+        elif 'vit' in name:
             name = name.split('_')[1]
             model = timm.create_model("deit_small_patch16_224", pretrained=False,num_classes=num_classes)
             model = load_pretrain(model)

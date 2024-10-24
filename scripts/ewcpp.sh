@@ -1,6 +1,4 @@
 #!/bin/bash
-
-
 MODE="ewc++"
 DATASET="cifar100" # cifar100, tinyimagenet, imagenet-r
 
@@ -29,11 +27,11 @@ else
     exit 1
 fi
 
-NOTE="EWC"_"$MEM_SIZE" # Short description of the experiment. (WARNING: logs/results with the same note will be overwritten!)
+NOTE="EWC++"_"$MEM_SIZE" # Short description of the experiment. (WARNING: logs/results with the same note will be overwritten!)
 
 for seed in 1 2 3 4 5
 do
-    CUDA_VISIBLE_DEVICES="3" python main.py --mode $MODE \
+    CUDA_VISIBLE_DEVICES="0" python main.py --mode $MODE \
     --dataset $DATASET \
     --n_tasks $N_TASKS --m $M --n $N \
     --rnd_seed $seed \

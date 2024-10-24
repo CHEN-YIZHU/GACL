@@ -31,7 +31,6 @@ We propose a new exemplar-free Generalized class incremental learning (GCIL) tec
 <img src="img/Overview.jpg" width="800px">
 </div>
 
-
 ## ⚡ Quick Start
 
 ### Setup code environment
@@ -63,16 +62,36 @@ https://drive.google.com/file/d/1uEpqe6xo--8jdpOgR_YX3JqTHqj34oX6/view?usp=shari
 ### Training scripts
 
 Please see `scripts` folder.
-
-The current implementation of GACL does not support multi-GPU training. However, we will soon provide a version with Distributed Data Parallel (DDP) support.
+For example, you may run GCIL experiments using our GACL method by
 
 ```Bash
    . scripts/gacl.sh
 ```
+You may change various arguments for different experiments.
+- `NOTE`: Short description of the experiment. Experiment result and log will be saved at `results/DATASET/NOTE`.
+  - WARNING: logs/results with the same dataset and note will be overwritten!
+- `MODE`: Method to be applied. Methods implemented in this version are: [er, ewc++, rm, mvp-r, dualpormpt, l2p, lwf, mvp, slda, gacl]
+- `DATASET`: Dataset to use in experiment. Supported datasets are: [cifar100, tinyimagenet, imagenet-r]
+- `N_TASKS`: Number of tasks.
+- `N`: The disjoint class ratio $r_\text{D}$ in Si-Blurry split. N=100 for full disjoint, N=0 for full blurry.
+- `M`: The blurry sample ratio $r_\text{B}$ in Si-Blurry split.
+- `GPU_TRANSFORM`: Perform AutoAug on GPU, for faster running.
+- `USE_AMP`: Use automatic mixed precision (amp), for faster running and reducing memory cost.
+- `MEM_SIZE`: Maximum number of samples in the episodic memory.
+- `ONLINE_ITER`: Number of model updates per sample.
+- `EVAL_PERIOD`: Period of evaluation queries, for calculating $ \mathcal A_{\text{AUC}}$ .
 
-### GCIL Setting
 
-It is possible to modify the the disjoint class ratio $r_\text{D}$ (N) and blurry sample ratio $r_\text{B}$ (M) in the scripts for various data distribution. 
+### Hyper-Parameters of the GACL
+The backbones are frozen during the incremental learning process of our GACL.
+
+1. **Buffer Size**
+
+    For the GACL, the buffer size means the *expansion size* of the random projection layer. On most datasets, the performance of the algorithm first increases and then decreases as the buffer size increases. You can see further experiments on this hyperparameter in our papers. A larger buffer size requires more memory.
+
+2. **$\gamma$ (Regularization Term)** 
+
+    For the dataset used in the papers, $\gamma$ is insensitive within a interval. However, a $\gamma$ that is too small may cause numerical stability problems in matrix inversion, and a $\gamma$ that is too large may cause under-fitting of the classifier. When you migrate our algorithm to other datasets, we still recommend that you do some experiments to check whether $\gamma$ is appropriate.
 
 ## 🎗️ Acknowledgments
 

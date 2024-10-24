@@ -14,18 +14,9 @@ class GACL(_Trainer):
         super(GACL, self).__init__(**kwargs)
         self.dtype = torch.double
         self.out_features = 0
-        self.Gamma = kwargs.get("Gamma") 
-        self.hidden =  kwargs.get("Hidden")
-
-        self.feature_size = self.hidden
-        
-    
-    def get_device(self):   
-        if torch.cuda.is_available():
-            return torch.device('cuda:0')
-        else:
-            return torch.device('cpu')
-
+        self.Gamma = kwargs.get("gamma_main") 
+        self.buffer_size =  kwargs.get("buffer_size")
+        self.feature_size = self.buffer_size
 
     def train_learner(self):
         eval_dict = dict()

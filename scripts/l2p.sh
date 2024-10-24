@@ -2,7 +2,6 @@
 
 MODE="er"
 DATASET="cifar100" # cifar100, tinyimagenet, imagenet-r
-DATASET="tinyimagenet"
 
 N_TASKS=5
 N=50
@@ -34,7 +33,7 @@ NOTE="L2P"  # Short description of the experiment. (WARNING: logs/results with t
 
 for seed in 1 2 3 4 5
 do
-    CUDA_VISIBLE_DEVICES="6" python main.py --mode $MODE \
+    CUDA_VISIBLE_DEVICES="0" python main.py --mode $MODE \
     --dataset $DATASET \
     --n_tasks $N_TASKS --m $M --n $N \
     --rnd_seed $seed \

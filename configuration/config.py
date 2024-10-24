@@ -129,8 +129,8 @@ def base_parser():
 
 
     # GACL
-    parser.add_argument('--Hidden', default=5000, type=int, help='')
-    parser.add_argument('--Gamma', default=100, type=float, help='')
+    parser.add_argument('--buffer_size', default=5000, type=int, help="The buffer size of the classifier.")
+    parser.add_argument('--gamma_main', default=100, type=float, help="The regularization term of the linear classifier.")
 
 
     args = parser.parse_args()
