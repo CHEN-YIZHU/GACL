@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import logging
 import timm
 from timm.models.registry import register_model
-from timm.models.vision_transformer import _cfg, default_cfgs,_create_vision_transformer
+from timm.models.vision_transformer import _create_vision_transformer
 from utils.train_utils import load_pretrain
 
 
@@ -14,21 +14,6 @@ logger = logging.getLogger()
 
 T = TypeVar('T', bound = 'nn.Module')
 
-"""default_cfgs['vit_base_patch16_224_l2p'] = _cfg(
-        url='https://storage.googleapis.com/vit_models/imagenet21k/ViT-B_16.npz',
-        num_classes=21843)
-
-# Register the backbone model to timm
-@register_model
-def vit_base_patch16_224_l2p(pretrained=False, **kwargs):
-     ViT-Base model (ViT-B/32) from original paper (https://arxiv.org/abs/2010.11929).
-    ImageNet-21k weights @ 224x224, source https://github.com/google-research/vision_transformer.
-    NOTE: this model has valid 21k classifier head and no representation (pre-logits) layer
-    
-    model_kwargs = dict(
-        patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
-    model = _create_vision_transformer('vit_base_patch16_224_l2p', pretrained=pretrained, **model_kwargs)
-    return model"""
 
 @register_model
 def deit_small_patch16_224(pretrained=False, **kwargs):
@@ -106,7 +91,6 @@ class L2P(nn.Module):
                  selection_size : int   = 5,
                  prompt_len     : int   = 5,
                  num_classes    : int   = 100,
-                 backbone_name  : str   = 'vit_base_patch16_224',  #'vit_base_patch16_224_l2p',
                  lambd          : float = 0.5,
                  _batchwise_selection  : bool = False,
                  _diversed_selection   : bool = True,
@@ -117,8 +101,7 @@ class L2P(nn.Module):
         self.features = torch.empty(0)
         self.keys     = torch.empty(0)
 
-        if backbone_name is None:
-            raise ValueError('backbone_name must be specified')
+
         if pool_size < selection_size:
             raise ValueError('pool_size must be larger than selection_size')
 
@@ -128,7 +111,6 @@ class L2P(nn.Module):
         self._batchwise_selection = _batchwise_selection
         self.class_num            = num_classes
 
-        # self.add_module('backbone', timm.models.create_model(backbone_name, pretrained=True, num_classes=num_classes, drop_rate=0.,drop_path_rate=0.,drop_block_rate=None))
         self.vit = timm.create_model("deit_small_patch16_224", pretrained=False,num_classes=num_classes, drop_rate=0.,drop_path_rate=0.,drop_block_rate=None)
         self.vit = load_pretrain(self.vit)
         self.add_module('backbone', self.vit)

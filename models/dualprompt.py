@@ -15,17 +15,6 @@ T = TypeVar('T', bound = 'nn.Module')
 
 # Register the backbone model to timm
 @register_model
-def vit_base_patch16_224_l2p(pretrained=False, **kwargs):
-    """ ViT-Base model (ViT-B/32) from original paper (https://arxiv.org/abs/2010.11929).
-    ImageNet-21k weights @ 224x224, source https://github.com/google-research/vision_transformer.
-    NOTE: this model has valid 21k classifier head and no representation (pre-logits) layer
-    """
-    model_kwargs = dict(
-        patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
-    model = _create_vision_transformer('vit_base_patch16_224_l2p', pretrained=pretrained, **model_kwargs)
-    return model
-
-@register_model
 def deit_small_patch16_224(pretrained=False, **kwargs):
     """ DeiT-small model @ 224x224 from paper (https://arxiv.org/abs/2012.12877).
     ImageNet-1k weights from https://github.com/facebookresearch/deit.
@@ -105,15 +94,12 @@ class DualPrompt(nn.Module):
                  task_num       : int   = 10,
                  num_classes    : int   = 100,
                  lambd          : float = 1.0,
-                 backbone_name  : str   =  'vit_base_patch16_224', # 'vit_base_patch16_224_l2p',
                  **kwargs):
         super().__init__()
 
         # self.features = torch.empty(0)
         # self.keys     = torch.empty(0)
 
-        if backbone_name is None:
-            raise ValueError('backbone_name must be specified')
 
         self.register_buffer('pos_g_prompt', torch.tensor(pos_g_prompt, dtype=torch.int64))
         self.register_buffer('pos_e_prompt', torch.tensor(pos_e_prompt, dtype=torch.int64))
@@ -123,7 +109,6 @@ class DualPrompt(nn.Module):
         self.lambd      = lambd
         self.class_num  = num_classes
 
-        # self.add_module('backbone', timm.create_model(backbone_name, pretrained=True, num_classes=num_classes))
         self.vit = timm.create_model("deit_small_patch16_224", pretrained=False,num_classes=num_classes)
         self.vit = load_pretrain(self.vit)
         self.add_module('backbone', self.vit)

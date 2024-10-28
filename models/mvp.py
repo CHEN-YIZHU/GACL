@@ -37,7 +37,6 @@ class MVP(nn.Module):
                  use_mask       : bool  = True,
                  use_contrastiv : bool  = False,
                  use_last_layer : bool  = True,
-                #  backbone_name  : str   = 'vit_base_patch16_224_l2p',
                  **kwargs):
 
         super().__init__()
@@ -45,8 +44,7 @@ class MVP(nn.Module):
         self.features = torch.empty(0)
         self.keys     = torch.empty(0)
 
-        # if backbone_name is None:
-        #     raise ValueError('backbone_name must be specified')
+
         self.lambd       = lambd
         self.class_num   = num_classes
         self.task_num    = task_num
@@ -55,12 +53,9 @@ class MVP(nn.Module):
         self.use_last_layer  = use_last_layer
         self.selection_size  = selection_size
 
-        # self.add_module('backbone', timm.models.create_model(backbone_name, pretrained=True, num_classes=num_classes,
-        #                                                      drop_rate=0.,drop_path_rate=0.,drop_block_rate=None))
         self.vit = timm.create_model("deit_small_patch16_224", pretrained=False,num_classes=num_classes, drop_rate=0.,drop_path_rate=0.,drop_block_rate=None)
         self.vit = load_pretrain(self.vit)
         self.add_module('backbone', self.vit)
-        
         
         for name, param in self.backbone.named_parameters():
                 param.requires_grad = False
@@ -196,16 +191,18 @@ class MVP(nn.Module):
         else:
             mass = 1.
         scaled_distance = distance * mass
-        topk = scaled_distance.topk(self.selection_size, dim=1, largest=False)[1]
+        topk = scaled_distance.topk(self.selection_size, dim=1, largest=False)[1]    
         distance = distance[torch.arange(topk.size(0), device=topk.device).unsqueeze(1).repeat(1,self.selection_size), topk].squeeze().clone()
         e_prompts = self.e_prompts[topk].squeeze().clone()
         mask = self.mask[topk].mean(1).squeeze().clone()
         
-    
         if self.use_contrastiv:
             key_wise_distance = 1 - F.cosine_similarity(self.key.unsqueeze(1), self.key.detach(), dim=-1)
-            self.similarity_loss = -((key_wise_distance[topk] / mass[topk]).exp().mean() / ((key_wise_distance[topk] / mass[topk]).exp().mean())).log()
-        else:
+            distance_div_mass = distance / mass.unsqueeze(-1)
+            key_dist_div_mass = key_wise_distance / mass.unsqueeze(-1)
+            key_dist_topk = key_dist_div_mass[topk].clone()
+            self.similarity_loss = - ((key_dist_topk.exp().sum() / (distance_div_mass.exp().sum() + key_dist_topk.exp().sum()) + 1e-6).log())
+        else:    
             self.similarity_loss = distance.mean()
 
         g_prompts = self.g_prompts[0].repeat(B, 1, 1)
