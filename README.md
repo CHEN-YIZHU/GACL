@@ -1,11 +1,13 @@
 <div align="center">
   
 # 【NeurIPS'2024】GACL: Exemplar-Free Generalized Analytic Continual Learning
+### Huiping Zhuang*, Yizhu Chen*, Di Fang, Run He, Kai Tong, Hongxin Wei, Ziqian Zeng†, Cen Chen†
+  
 [![Conference](http://img.shields.io/badge/NeurIPS-2024-FFD93D.svg)](https://neurips.cc/)
+[![Paper](https://img.shields.io/badge/arXiv-2403.15706-b31b1b.svg)](https://arxiv.org/abs/2403.15706)
 </div>
 
-
-The code repository for "GACL: Exemplar-Free Generalized Analytic Continual Learning" [[paper](https://neurips.cc/virtual/2024/poster/95330)] in PyTorch. The implementation of the GACL algorithm is also available at [Analytic-Continual-Learning](https://github.com/ZHUANGHP/Analytic-continual-learning).
+The code repository for [GACL: Exemplar-Free Generalized Analytic Continual Learning](https://arxiv.org/pdf/2403.15706) in PyTorch. The implementation of the GACL algorithm is also available at [Analytic-Continual-Learning](https://github.com/ZHUANGHP/Analytic-continual-learning).
 
 ---
 
